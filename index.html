@@ -1,0 +1,557 @@
+<html>
+
+<head>
+
+    <style>
+        body {
+            color: green;
+        }
+
+
+        [screen-container] {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            background-color: #333333;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        [screen] {
+            background-color: black;
+            border: 1px solid red;
+            /* width: 200px;
+            height: 800px; */
+
+        }
+
+        [game-header] {}
+
+
+        [game-canvas-container] {
+            height: 500px;
+        }
+
+
+        [game-footer] {
+            background-color: blue;
+        }
+
+
+
+        [game-canvas] {
+            position: absolute;
+            /* width: 800px; */
+            height: 500px;
+            border: 1px solid green;
+        }
+
+        [sprite] {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-color: blue;
+            border: 1px solid green;
+        }
+
+        [enemy] {
+            background-color: red;
+        }
+
+        [tank] {
+            background-color: green;
+            color: white;
+        }
+
+        [sheild] {
+            background-color: purple;
+        }
+
+        [missile] {
+            background-color: yellow;
+            width: 2px;
+            height: 20px;
+        }
+
+        [bomb] {
+            background-color: red;
+            width: 2px;
+            height: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div screen-container>
+        <div screen>
+            <div game-header>
+                <h1>Game Header</h1>
+                <button onclick="start()">Start</button>
+                <button onclick="stop()">Stop</button>
+            </div>
+            <!-- Game container takes up the space as game-canvas is absolute -->
+            <div game-canvas-container>
+                <div game-canvas>
+                    Game
+                </div>
+            </div>
+            <div game-footer>
+                <h3>Footer</h3>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+<script>
+
+    const GAME_WIDTH = 500;
+    const GAME_HEIGHT = 500;
+    const DEFAULT_SPRITE_SIZE = 32;
+    const NUM_ENEMY_ROWS = 5;
+    const ENEMY_SIZE = 24;
+    
+    const ENEMY_X_SPACE = 16;
+    const ENEMY_Y_SPACE = 15;
+
+    const MISSILE_SPEED = 10;
+    const MISSILE_WIDTH = 2;
+    const MISSILE_HEIGHT = 10;
+
+    const SHIELD_WIDTH = 50;
+    const SHIELD_HEIGHT = 20;
+
+
+    class GameItem {
+
+        constructor(type, x, y, width, height, metadata) {
+            this.type = type;
+            this.x = x;
+            this.y = y;
+            this.width = width || DEFAULT_SPRITE_SIZE;
+            this.height = height || DEFAULT_SPRITE_SIZE;
+            this.isAlive = true;
+            this.metadata = metadata;
+        }
+
+    }
+
+    class GameModel {
+
+        constructor() {
+            console.log('Game Model created')
+            this.sprites = [];
+            this.numSprites = 0;
+            this.gameWidth = GAME_WIDTH;
+            this.gameHeight = GAME_HEIGHT;
+        }
+
+        addSprite(gameItem) {
+            this.sprites.push(gameItem);
+            gameItem.id = 'item' + this.numSprites;
+            this.numSprites++;
+            return gameItem;
+        }
+
+    }
+
+
+    class Renderer {
+
+        constructor(model) {
+            this.model = model;
+            //this.itemToSprite = {};
+            // this.init();
+        }
+
+        init() {
+
+            // Style DIVS
+            // debugger;
+            //document.querySelector('[screen]').style.setProperty('width', `${this.model.gameWidth}px`)
+
+            document.querySelector('[game-canvas]').style.setProperty('width', `${this.model.gameWidth}px`)
+            // Create div sprites
+
+
+            document.querySelector('[screen]').style.setProperty('width', '800px')
+            console.log('gameWidth', this.gameWidth);
+
+            this.model.sprites.forEach((gameItem) => {
+                this.addSprite(gameItem);
+                //this.itemToSprite[gameItem] = e;
+            })
+        }
+
+        addSprite(gameItem) {
+            const gameDiv = document.querySelector('[game-canvas]')
+            const e = document.createElement('div');
+            e.setAttribute('sprite', true);
+            e.setAttribute('itemID', gameItem.id);
+            e.setAttribute(gameItem.type, true);
+
+            for (let prop in gameItem.metadata) {
+                e.setAttribute(prop, gameItem.metadata[prop]);
+            }
+
+            // Set size in css
+            e.style.width = `${gameItem.width}px`;
+            e.style.height = `${gameItem.height}px`;
+            
+
+            //e.innerText = gameItem.type;
+            gameDiv.appendChild(e);
+            return e;
+        }
+
+        removeSprite(gameItem) {
+            const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
+            //sprite.style.left = 2000 + 'px';
+        }
+
+        render() {
+            const gameDiv = document.querySelector('[game-canvas]')
+            this.model.sprites.forEach((gameItem) => {
+                const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
+                sprite.style.left = gameItem.x + 'px';
+                sprite.style.top = gameItem.y + 'px';
+                sprite.innerText = gameItem[gameItem?.debugData] || '';
+
+                // Temp hide dead sprites
+                if (!gameItem.isAlive) {
+                    sprite.style.display = 'none';
+                }
+
+            })
+        }
+
+    }
+
+
+    class KeyboardManager {
+
+
+        constructor() {
+            document.addEventListener('keydown', (event) => this.keyDownHandler(event));
+            document.addEventListener('keyup', (event) => this.keyUpHandler(event));
+
+            this.keyDown = {};
+        }
+
+        keyDownHandler(event) {
+            event.preventDefault()
+            this.keyDown[event.code] = true;
+        }
+
+        keyUpHandler(event) {
+            event.preventDefault()
+            this.keyDown[event.code] = false;
+        }
+
+    }
+
+
+    class Game {
+
+        constructor() {
+
+            this.isPaused = true;
+
+            this.frameCount = 0;
+            this.gameInProgress = false;
+            this.keyboard = new KeyboardManager();
+
+            console.log('Game Instansiated!');
+
+
+            this.model = new GameModel();
+
+            this.interval = null;
+            this.renderer = new Renderer(this.model);
+
+
+            // Space Invaders Specific Stuff
+
+            this.currentEnemyRow = NUM_ENEMY_ROWS;
+            this.numActiveMissiles = 0;
+
+            // Create Enemies
+            for (var y = 0; y < NUM_ENEMY_ROWS; y++) {
+                for (var x = 0; x < 11; x++) {
+                    this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, (ENEMY_SIZE + ENEMY_Y_SPACE) * y, ENEMY_SIZE, ENEMY_SIZE, { row: y }));
+                }
+            }
+
+            // Create shields
+            for (var x = 0; x < 4; x++) {
+                const shield = this.model.addSprite(new GameItem('shield', 50 + (SHIELD_WIDTH * x) + (60 * x), 400, SHIELD_WIDTH, SHIELD_HEIGHT));
+                shield.debugData = 'strength';
+                shield.strength = 10;
+            }
+
+            this.enemyDirection = 1;
+            this.enemySpeed = 8;
+            this.moveEnemyCount = 0;
+
+            // Create Tank
+            this.tank = this.model.addSprite(new GameItem('tank', this.model.gameWidth / 2, this.model.gameHeight - DEFAULT_SPRITE_SIZE));
+            this.tank.lives = 3;
+            this.tank.debugData = 'lives';
+            this.tankSpeed = 4;
+            this.fireMissile = false;
+
+            // Fire missile
+            document.addEventListener('keyup', (event) => {
+                if (event.code == 'Space' && this.numActiveMissiles === 0) {
+                    console.log('Space pressed');
+                    this.fireMissile = true;
+                    this.numActiveMissiles++;
+                }
+            });
+
+        }
+
+
+        init() {
+            this.renderer.init();
+        }
+
+        start() {
+            if (this.gameInProgress) {
+                return;
+            }
+            this.isPaused = false;
+            this.gameInProgress = true;
+            this.renderer.render();
+            // this.interval = setInterval(() => {
+            //     this.gameLoop()
+            // }, 10);
+            this.animationFrameGameLoop()
+        }
+
+        stop() {
+            this.isPaused = true;
+            // clearInterval(this.interval);
+            this.gameInProgress = false;
+        }
+
+        animationFrameGameLoop() {
+            requestAnimationFrame(() => {
+                this.gameLoop();
+            })
+        }
+
+        gameLoop() {
+
+
+            this.frameCount++;
+
+            const getLiveItems = (type) => {
+                return this.model.sprites.filter(gameItem => gameItem.type === type && gameItem.isAlive)
+            }
+
+            let enemiesHitWall = false;
+
+            // Move all sprites before calculating anything
+
+
+            // Move Tank
+            if (this.keyboard.keyDown['ArrowRight']) {
+                this.tank.x += this.tankSpeed;
+            }
+
+            if (this.keyboard.keyDown['ArrowLeft']) {
+                this.tank.x -= this.tankSpeed;
+            }
+
+            // Create Missile
+            if (this.fireMissile) {
+                console.log('Fire Missile!!!');
+                this.model.addSprite(new GameItem('missile', this.tank.x + (this.tank.width * 0.5), this.tank.y, MISSILE_WIDTH, MISSILE_HEIGHT));
+                this.fireMissile = false;
+            }
+
+
+            // Create Enemy Bomb
+            if (this.fireBomb && this.firingEnemy) {
+                console.log('Fire Bomb!!!');
+                this.model.addSprite(new GameItem('bomb', this.firingEnemy.x + (DEFAULT_SPRITE_SIZE * 0.5), this.firingEnemy.y + (DEFAULT_SPRITE_SIZE * 0.5), 2, 20));
+                this.fireBomb = false;
+                this.firingEnemy = null;
+            }
+
+            const enemies = getLiveItems('enemy');
+            const shields = getLiveItems('shield');
+
+            // Move enemies
+            // Staggered enemy movement by row
+            if (this.moveEnemyCount === 10) {
+                enemies.forEach(gameSprite => {
+
+                    if (gameSprite.metadata.row === this.currentEnemyRow) {
+                        gameSprite.x += (this.enemyDirection * this.enemySpeed);
+                    }
+
+                    // TODO - We will need to keep track of min - max rows
+                    if (gameSprite.metadata.row === 0) {
+                        // Check if hit right wall
+                        if (this.enemyDirection > 0 && (gameSprite.x + gameSprite.width) >= this.model.gameWidth) {
+                            enemiesHitWall = true;
+                        }
+
+                        // Check if hit left wall
+                        if (this.enemyDirection < 0 && gameSprite.x <= 0) {
+                            enemiesHitWall = true;
+                        }
+                    }
+                })
+
+                // change currentEnemyRow
+                this.currentEnemyRow--;
+                if (this.currentEnemyRow < 0) {
+                    this.currentEnemyRow = NUM_ENEMY_ROWS - 1;
+                }
+
+                this.moveEnemyCount = 0;
+            }
+
+
+            // Fire Enemy bombs randomly
+            if (Math.floor(Math.random() * 40) === 0) {
+                this.fireBomb = true;
+                // Pick random enemy
+                this.firingEnemy = enemies[Math.floor(Math.random() * enemies.length - 1)]
+            }
+
+
+            const missiles = getLiveItems('missile');
+            // Move missiles
+            missiles.forEach(gameSprite => {
+                gameSprite.y -= MISSILE_SPEED;
+            })
+
+            const bombs = getLiveItems('bomb');
+            // Move missiles
+            bombs.forEach(gameSprite => {
+                gameSprite.y += MISSILE_SPEED;
+            })
+
+
+            // Game Logic
+            if (enemiesHitWall) {
+                this.enemyDirection *= -1;
+                enemies.forEach(enemy => {
+                    enemy.y += ENEMY_SIZE;
+                })
+                enemiesHitWall = false;
+            }
+
+
+            const isHit = (a, b) => {
+                if (a.x > b.x && a.x < b.x + b.width) {
+                    if (a.y > b.y && a.y < b.y + b.height) {
+                        return true;
+                    }
+                }
+            }
+
+
+            // COLLISION DETECTION
+
+            // Check if missile has hit an invader
+            missiles.forEach(missile => {
+
+                enemies.forEach(enemy => {
+                    if (isHit(missile, enemy)) {
+                        enemy.isAlive = false;
+                        missile.isAlive = false;
+                        this.numActiveMissiles--;
+                    }
+                })
+
+                shields.forEach(shield => {
+                    if (isHit(missile, shield)) {
+                        //enemy.isAlive = false;
+                        shield.strength--;
+                        missile.isAlive = false;
+                        this.numActiveMissiles--;
+
+                        if(shield.strength === 0) {
+                            shield.isAlive = false;
+                        }
+                    }
+                })
+
+                //Check missile has gone above screen
+                if (missile.y < 0) {
+                    missile.isAlive = false;
+                    this.numActiveMissiles--;
+                }
+            })
+
+
+            // Check if bombs has hit 
+            bombs.forEach(bomb => {
+
+                if (isHit(bomb, this.tank)) {
+                    bomb.isAlive = false;
+                    this.tank.lives--;
+                    // TODO - Tank Hit!!!
+                }
+
+                shields.forEach(shield => {
+                    if (isHit(bomb, shield)) {
+                        bomb.isAlive = false;
+                        shield.strength--;
+                    }
+
+                    if(shield.strength === 0) {
+                        shield.isAlive = false;
+                    }
+                })
+
+                //Check missile has gone below screen
+                if (bomb.y > this.gameHeight) {
+                    bomb.isAlive = false;
+                }
+            })
+
+
+            this.renderer.render();
+
+            if (!this.isPaused) {
+                this.animationFrameGameLoop();
+            }
+
+            // Increase counters
+            this.moveEnemyCount++;
+        }
+
+
+    }
+
+
+    const game = new Game();
+    game.init();
+
+    function start() {
+        game.start();
+    }
+
+    function stop() {
+        game.stop();
+    }
+
+
+
+
+
+
+</script>
+
+
+
+</html>
