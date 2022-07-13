@@ -54,7 +54,7 @@
         }
 
         [enemy]::before {
-            content: "\1f618";
+            content: "\1F47E";
             font-size: 1.5em;
         }
 
@@ -332,7 +332,7 @@
             // Create Enemies
             for (var y = 0; y < NUM_ENEMY_ROWS; y++) {
                 for (var x = 0; x < 11; x++) {
-                    this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + 50, ENEMY_SIZE, ENEMY_SIZE, { row: y }));
+                    this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + 50, ENEMY_SIZE, ENEMY_SIZE, { column: x, row: y }));
                 }
             }
 
@@ -489,11 +489,22 @@
             }
 
 
+            // Enemy Bombs
+
+            // Find lowest enemies
+            const lowestCols = [];
+            enemies.forEach(gameSprite => {
+                if(gameSprite.isAlive) {
+                    const col = gameSprite.metadata.column;
+                    lowestCols[col] = gameSprite;
+                }
+            })
+
             // Fire Enemy bombs randomly
             if (Math.floor(Math.random() * 40) === 0) {
                 this.fireBomb = true;
                 // Pick random enemy
-                this.firingEnemy = enemies[Math.floor(Math.random() * enemies.length - 1)]
+                this.firingEnemy = lowestCols[Math.floor(Math.random() * lowestCols.length - 1)]
             }
 
             // Random Mystery ship
