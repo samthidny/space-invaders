@@ -191,7 +191,7 @@
             // Create div sprites
 
 
-            document.querySelector('[screen]').style.setProperty('width', '800px')
+            document.querySelector('[screen]').style.setProperty('width', `${this.model.gameWidth}px`)
 
             this.model.sprites.forEach((gameItem) => {
                 this.addSprite(gameItem);
@@ -668,6 +668,7 @@
     }
 
     function nextLevel() {
+        game.start();
         game.nextLevel();
     }
 
