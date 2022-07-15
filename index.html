@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <meta charset="utf-8" />
     <style>
@@ -65,7 +66,7 @@
 
         [shield] {
             background-color: green;
-            color: white;
+            border: none;
         }
 
         [missile] {
@@ -90,6 +91,8 @@
         <div screen>
             <div game-header>
                 <div>SCORE: <span score-text>0</span></div>
+                <div>DEBUG: <span debug-text>xxx</span></div>
+                
                 <button onclick="start()">Play</button>
                 <button onclick="stop()">Pause</button>
                 <button onclick="nextLevel()">Next Level</button>
@@ -123,16 +126,20 @@
     const ENEMY_Y_SPACE = 15;
     const ENEMY_GROUND_LIMIT = 370;
 
-    const MISSILE_SPEED = 10;
+    const MISSILE_SPEED = 6;
     const MISSILE_WIDTH = 1;
     const MISSILE_HEIGHT = 6;
 
-    const BOMB_SPEED = 5;
+    const BOMB_SPEED = 3;
     const MAX_BOMBS = 1;
 
     const SHIELD_WIDTH = 60;
     const SHIELD_HEIGHT = 40;
 
+
+    const debug = (str) => {
+        document.querySelector('[debug-text]').innerText = str;
+    }
 
     class GameItem {
 
@@ -336,15 +343,29 @@
                 }
             }
 
+            const createShield = (xPos, yPos) => {
+                for (let y = 0; y < 5; y++) {
+                    for (let x = 0; x < 6; x++) {
+                        const blockSize = 10;
+                        const skip = y === 4 && x > 1 && x < 4;
+                        if (!skip) {
+                            this.model.addSprite(new GameItem('shield', xPos + (blockSize * x), yPos + (blockSize * y), blockSize, blockSize));
+                        }
+                    }
+                }
+            }
+
+
             // Create shields
             for (var x = 0; x < 4; x++) {
-                const shield = this.model.addSprite(new GameItem('shield', 50 + (SHIELD_WIDTH * x) + (50 * x), 400, SHIELD_WIDTH, SHIELD_HEIGHT));
-                shield.debugData = 'strength';
-                shield.strength = 10;
+                // const shield = this.model.addSprite(new GameItem('shield', 50 + (SHIELD_WIDTH * x) + (50 * x), 400, SHIELD_WIDTH, SHIELD_HEIGHT));
+                // shield.debugData = 'strength';
+                // shield.strength = 10;
+                createShield(50 + (SHIELD_WIDTH * x) + (50 * x), 400);
             }
 
             this.enemyDirection = 1;
-            this.enemySpeed = this.enemySpeed || 8;
+            this.enemySpeed = this.enemySpeed || 4;
             this.moveEnemyCount = 0;
 
             // Create Tank
@@ -373,10 +394,10 @@
             this.isPaused = false;
             this.gameInProgress = true;
             this.renderer.render();
-            // this.interval = setInterval(() => {
-            //     this.gameLoop()
-            // }, 10);
-            this.animationFrameGameLoop()
+            this.interval = setInterval(() => {
+                this.gameLoop()
+            }, 10);
+            // this.animationFrameGameLoop()
         }
 
         stop() {
@@ -385,14 +406,17 @@
             this.gameInProgress = false;
         }
 
-
-        nextLevel() {
-            // Set things like speed, num Missiles etc here
+        speedUpEnemyMovement() {
             this.enemyStaggerFrequency -= 1;
             if (this.enemyStaggerFrequency < 1) {
                 this.enemyStaggerFrequency = 1;
             }
-            this.maxActiveBombs++;
+        }
+
+        nextLevel() {
+            // Set things like speed, num Missiles etc here
+            this.speedUpEnemyMovement();
+            //this.maxActiveBombs++;
 
             this.initLevel();
         }
@@ -433,7 +457,8 @@
                 this.fireMissile = false;
             }
 
-
+            debug(this.numActiveBombs + ', ' + this.maxActiveBombs)
+            
             // Create Enemy Bomb
             if (this.fireBomb && this.firingEnemy && this.numActiveBombs < this.maxActiveBombs) {
                 this.model.addSprite(new GameItem('bomb', this.firingEnemy.x + (DEFAULT_SPRITE_SIZE * 0.5), this.firingEnemy.y + (DEFAULT_SPRITE_SIZE * 0.5), 2, 20));
@@ -494,7 +519,7 @@
             // Find lowest enemies
             const lowestCols = [];
             enemies.forEach(gameSprite => {
-                if(gameSprite.isAlive) {
+                if (gameSprite.isAlive) {
                     const col = gameSprite.metadata.column;
                     lowestCols[col] = gameSprite;
                 }
@@ -532,20 +557,19 @@
                 gameSprite.x += 1;
             })
 
-
             // Game Logic
             if (enemiesHitWall) {
                 this.enemyDirection *= -1;
                 enemies.forEach(enemy => {
                     enemy.y += ENEMY_SIZE;
                 })
+                this.speedUpEnemyMovement();
                 enemiesHitWall = false;
             }
 
-
             const isHit = (a, b) => {
-                if (a.x > b.x && a.x < b.x + b.width) {
-                    if (a.y > b.y && a.y < b.y + b.height) {
+                if (a.x < b.x + b.width && a.x + a.width > b.x) {
+                    if (a.y < b.y + b.height && a.y + a.height > b.y) {
                         return true;
                     }
                 }
@@ -586,14 +610,16 @@
 
                 shields.forEach(shield => {
                     if (isHit(missile, shield)) {
+                        shield.isAlive = false;
+
                         //enemy.isAlive = false;
-                        shield.strength--;
+                        // shield.strength--;
                         missile.isAlive = false;
                         this.numActiveMissiles--;
 
-                        if (shield.strength === 0) {
-                            shield.isAlive = false;
-                        }
+                        // if (shield.strength === 0) {
+
+                        // }
                     }
                 })
 
@@ -611,6 +637,9 @@
                 if (isHit(bomb, this.tank)) {
                     bomb.isAlive = false;
                     this.numActiveBombs--;
+                    if(this.numActiveBombs < 0) {
+                        this.numActiveBombs = 0;
+                    }
                     this.tank.lives--;
                     this.model.lives--;
                     // TODO - Tank Hit!!!
@@ -619,12 +648,8 @@
                 shields.forEach(shield => {
                     if (isHit(bomb, shield)) {
                         bomb.isAlive = false;
-                        this.numActiveBombs--
-                        shield.strength--;
-                    }
-
-                    if (shield.strength === 0) {
                         shield.isAlive = false;
+                        this.numActiveBombs--
                     }
                 })
 
@@ -658,8 +683,12 @@
                 this.gameOver();
             }
 
-            if (!this.isPaused && this.gameInProgress) {
-                this.animationFrameGameLoop();
+            // if (!this.isPaused && this.gameInProgress) {
+            //     this.animationFrameGameLoop();
+            // }
+
+            if(this.isPaused || !this.gameInProgress) {
+                clearInterval(this.interval);
             }
         }
 
