@@ -20,10 +20,6 @@
 
         [screen] {
             background-color: black;
-            border: 1px solid red;
-            /* width: 200px;
-            height: 800px; */
-
         }
 
         [game-header] {}
@@ -35,23 +31,16 @@
 
 
         [game-footer] {
-            background-color: blue;
+            background-color: #666;
         }
-
-
 
         [game-canvas] {
             position: absolute;
-            /* width: 800px; */
             height: 500px;
-            border: 1px solid green;
         }
 
         [sprite] {
             position: absolute;
-            width: 32px;
-            height: 32px;
-            border: 1px solid green;
         }
 
         [enemy]::before {
@@ -118,11 +107,11 @@
     const GAME_HEIGHT = 500;
     const DEFAULT_SPRITE_SIZE = 32;
 
-    const TANK_SPEED = 3;
+    const TANK_SPEED = 2;
 
     const NUM_ENEMY_ROWS = 5;
     const ENEMY_SIZE = 24;
-    const ENEMY_X_SPACE = 16;
+    const ENEMY_X_SPACE = 17;
     const ENEMY_Y_SPACE = 15;
     const ENEMY_GROUND_LIMIT = 370;
 
@@ -288,7 +277,7 @@
         }
 
         init() {
-
+            this.gameLoopsPerSecond = 100;
             this.isPaused = true;
             this.frameCount = 0;
             this.gameInProgress = false;
@@ -304,9 +293,11 @@
             // Initial game values
             this.model.lives = 3;
             this.model.score = 0;
-            this.enemyStaggerFrequency = 10;
+            this.enemyStaggerFrequency = 20;
             this.maxActiveBombs = 1;
 
+            this.enemyStartY = 50;
+            this.enemySpeedUpActivated = false;
 
             this.initLevel()
 
@@ -339,7 +330,7 @@
             // Create Enemies
             for (var y = 0; y < NUM_ENEMY_ROWS; y++) {
                 for (var x = 0; x < 11; x++) {
-                    this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + 50, ENEMY_SIZE, ENEMY_SIZE, { column: x, row: y }));
+                    this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + this.enemyStartY, ENEMY_SIZE, ENEMY_SIZE, { column: x, row: y }));
                 }
             }
 
@@ -358,14 +349,12 @@
 
             // Create shields
             for (var x = 0; x < 4; x++) {
-                // const shield = this.model.addSprite(new GameItem('shield', 50 + (SHIELD_WIDTH * x) + (50 * x), 400, SHIELD_WIDTH, SHIELD_HEIGHT));
-                // shield.debugData = 'strength';
-                // shield.strength = 10;
                 createShield(50 + (SHIELD_WIDTH * x) + (50 * x), 400);
             }
 
             this.enemyDirection = 1;
-            this.enemySpeed = this.enemySpeed || 4;
+            this.enemySpeed = 6;
+            this.enemyStaggerFrequency = 20;
             this.moveEnemyCount = 0;
 
             // Create Tank
@@ -396,7 +385,7 @@
             this.renderer.render();
             this.interval = setInterval(() => {
                 this.gameLoop()
-            }, 10);
+            }, Math.round(1000 / this.gameLoopsPerSecond));
             // this.animationFrameGameLoop()
         }
 
@@ -407,7 +396,8 @@
         }
 
         speedUpEnemyMovement() {
-            this.enemyStaggerFrequency -= 1;
+            this.enemyStaggerFrequency -= 2;
+            console.log('New Stagger Frequency', this.enemyStaggerFrequency)
             if (this.enemyStaggerFrequency < 1) {
                 this.enemyStaggerFrequency = 1;
             }
@@ -415,9 +405,10 @@
 
         nextLevel() {
             // Set things like speed, num Missiles etc here
-            this.speedUpEnemyMovement();
+            //this.speedUpEnemyMovement();
             //this.maxActiveBombs++;
 
+            this.enemyStartY += 5;
             this.initLevel();
         }
 
@@ -483,7 +474,7 @@
 
             // Move enemies
             // Staggered enemy movement by row
-            if (this.moveEnemyCount === this.enemyStaggerFrequency) {
+            if (this.moveEnemyCount % this.enemyStaggerFrequency === 0) {
                 enemies.forEach(gameSprite => {
 
                     if (gameSprite.metadata.row === this.currentEnemyRow) {
@@ -563,7 +554,6 @@
                 enemies.forEach(enemy => {
                     enemy.y += ENEMY_SIZE;
                 })
-                this.speedUpEnemyMovement();
                 enemiesHitWall = false;
             }
 
@@ -604,7 +594,10 @@
                             this.model.score += 30;
                         }
 
-
+                        if((enemies.length - 1) % 5 === 0) {
+                            console.log('SPEED UP!!!!!')
+                            this.speedUpEnemyMovement();
+                        }
                     }
                 })
 
@@ -678,6 +671,10 @@
 
             // Increase counters
             this.moveEnemyCount++;
+
+            if(this.model.lives === 0) {
+                this.gameIsOver = true;
+            }
 
             if (this.gameIsOver) {
                 this.gameOver();
