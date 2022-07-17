@@ -43,13 +43,18 @@
             position: absolute;
         }
 
+        [sprite] canvas {
+            width: 100%;
+            height: 100%;
+        }
+
         [enemy]::before {
             content: "\1F47E";
             font-size: 1.5em;
         }
 
         [tank] {
-            background-color: green;
+            /* background-color: green; */
             color: white;
         }
 
@@ -81,7 +86,7 @@
             <div game-header>
                 <div>SCORE: <span score-text>0</span></div>
                 <div>DEBUG: <span debug-text>xxx</span></div>
-                
+
                 <button onclick="start()">Play</button>
                 <button onclick="stop()">Pause</button>
                 <button onclick="nextLevel()">Next Level</button>
@@ -130,6 +135,27 @@
         document.querySelector('[debug-text]').innerText = str;
     }
 
+
+    const SPRITES = {
+        SHIP:
+            [
+                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ],
+
+
+
+    }
+
+
     class GameItem {
 
         constructor(type, x, y, width, height, metadata) {
@@ -163,10 +189,71 @@
     }
 
 
+
+    class SpriteAnimation {
+
+    }
+
+
+    class SpriteManager {
+
+        constructor() {
+            this.spriteImageDatas = {};
+        }
+
+
+        addSprite(name, spriteData) {
+            const imageData = this.createSpriteImageData(spriteData);
+            this.spriteImageDatas[name] = imageData;
+        }
+
+
+        drawToSprite(canvas, gameItem) {
+            const ctx = canvas.getContext('2d');
+            const imageData = this.spriteImageDatas[gameItem.type];
+            canvas.width = imageData.width;
+            canvas.height = imageData.height;
+            // ctx.scale(3, 3);
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        createSpriteImageData(spriteData) {
+            const spriteWidth = spriteData[0].length;
+            const spriteHeight = spriteData.length;
+            const spriteImageData = new ImageData(spriteWidth, spriteHeight);
+
+            console.log(spriteImageData);
+
+            for (let y = 0; y < spriteHeight; y++) {
+                for (let x = 0; x < spriteWidth; x++) {
+                    this.setPixel(spriteImageData, x, y, spriteData[y][x] ? 0x333333 : null);
+                }
+            }
+
+            return spriteImageData;
+        }
+
+
+        setPixel(imageData, x, y, color) {
+            x = Math.round(x);
+            y = Math.round(y);
+            const offset = ((y * imageData.width) + x) * 4;
+            imageData.data[offset] = (color >> 16);
+            imageData.data[offset + 1] = (color >> 8) & 0xff;
+            imageData.data[offset + 2] = (color) & 0xff;
+            imageData.data[offset + 3] = color === null ? 0 : 0xff;
+        }
+
+
+
+    }
+
+
     class Renderer {
 
         constructor(model) {
             this.model = model;
+            this.spriteManager = new SpriteManager();
             //this.itemToSprite = {};
             // this.init();
         }
@@ -179,15 +266,16 @@
 
         init() {
 
-            // Style DIVS
-            // debugger;
-            //document.querySelector('[screen]').style.setProperty('width', `${this.model.gameWidth}px`)
 
             document.querySelector('[game-canvas]').style.setProperty('width', `${this.model.gameWidth}px`)
-            // Create div sprites
-
-
             document.querySelector('[screen]').style.setProperty('width', `${this.model.gameWidth}px`)
+
+
+            // Set up sprite data
+
+            // Add sprite animations by name
+            this.spriteManager.addSprite('tank', SPRITES.SHIP);
+            // this.spriteManager.addSprite('enemy1', SPRITES.ALIEN1);
 
             this.model.sprites.forEach((gameItem) => {
                 this.addSprite(gameItem);
@@ -196,6 +284,9 @@
         }
 
         addSprite(gameItem) {
+
+            console.log('renderer addSprite ', gameItem.type)
+
             const gameDiv = document.querySelector('[game-canvas]')
             const e = document.createElement('div');
             e.setAttribute('sprite', true);
@@ -210,6 +301,15 @@
             e.style.width = `${gameItem.width}px`;
             e.style.height = `${gameItem.height}px`;
 
+            //Add canvas to div
+            const c = document.createElement('canvas');
+            c.setAttribute('width', gameItem.width);
+            c.setAttribute('height', gameItem.height);
+            e.appendChild(c);
+
+            if(gameItem.type === 'tank') {
+                this.spriteManager.drawToSprite(c, gameItem);
+            }
 
             //e.innerText = gameItem.type;
             gameDiv.appendChild(e);
@@ -227,7 +327,11 @@
                 const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
                 sprite.style.left = gameItem.x + 'px';
                 sprite.style.top = gameItem.y + 'px';
-                sprite.innerText = gameItem[gameItem?.debugData] || '';
+                //sprite.innerText = gameItem[gameItem?.debugData] || '';
+
+
+                // Set animation sprite
+
 
                 // Temp hide dead sprites
                 if (!gameItem.isAlive) {
@@ -449,7 +553,7 @@
             }
 
             debug(this.numActiveBombs + ', ' + this.maxActiveBombs)
-            
+
             // Create Enemy Bomb
             if (this.fireBomb && this.firingEnemy && this.numActiveBombs < this.maxActiveBombs) {
                 this.model.addSprite(new GameItem('bomb', this.firingEnemy.x + (DEFAULT_SPRITE_SIZE * 0.5), this.firingEnemy.y + (DEFAULT_SPRITE_SIZE * 0.5), 2, 20));
@@ -594,7 +698,7 @@
                             this.model.score += 30;
                         }
 
-                        if((enemies.length - 1) % 5 === 0) {
+                        if ((enemies.length - 1) % 5 === 0) {
                             console.log('SPEED UP!!!!!')
                             this.speedUpEnemyMovement();
                         }
@@ -630,7 +734,7 @@
                 if (isHit(bomb, this.tank)) {
                     bomb.isAlive = false;
                     this.numActiveBombs--;
-                    if(this.numActiveBombs < 0) {
+                    if (this.numActiveBombs < 0) {
                         this.numActiveBombs = 0;
                     }
                     this.tank.lives--;
@@ -672,7 +776,7 @@
             // Increase counters
             this.moveEnemyCount++;
 
-            if(this.model.lives === 0) {
+            if (this.model.lives === 0) {
                 this.gameIsOver = true;
             }
 
@@ -684,7 +788,7 @@
             //     this.animationFrameGameLoop();
             // }
 
-            if(this.isPaused || !this.gameInProgress) {
+            if (this.isPaused || !this.gameInProgress) {
                 clearInterval(this.interval);
             }
         }

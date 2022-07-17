@@ -1,0 +1,196 @@
+<html>
+
+<head>
+    <script>
+
+        const SPRITES = {
+            SHIP: [
+                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            ],
+            BULLET: [
+                [1, 1],
+                [1, 1]
+            ],
+            ALIEN_1_0: [
+                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 1, 0, 0, 0, 0, 1, 0, 0]
+            ],
+            ALIEN_1_1: [
+                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+                [0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
+                [0, 1, 0, 1, 0, 0, 1, 0, 1, 0]
+            ],
+            ALIEN_2_0: [
+                [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+                [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+                [0, 0, 0, 1, 0, 0, 1, 0, 0, 0]
+            ],
+            ALIEN_2_1: [
+                [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+                [1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+                [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+                [1, 1, 1, 0, 1, 1, 0, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0]
+            ],
+            ALIEN_3: [
+                [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
+                [1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
+                [0, 1, 1, 0, 0, 0, 0, 1, 1, 0]
+            ]
+        }
+
+
+    </script>
+
+
+    <style>
+        [sprite] {
+            border: 1px solid red;
+            width: 10px;
+            height: 8px;
+        }
+    </style>
+
+
+</head>
+
+
+
+<body>
+
+    <h1>Hello</h1>
+    <canvas id="canvas" sprite width="10" height="10"></canvas>
+
+
+</body>
+
+
+<script>
+
+    const spriteWidth = 10;
+    const spriteHeight = 10;
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+
+    //const shipImageData = new ImageData(spriteWidth, spriteHeight);
+    // let spriteData = SPRITES.SHIP;
+    // for (let y = 0; y < spriteData.length; y++) {
+    //     console.log('Row', y);
+    //     for (let x = 0; x < spriteData[y].length; x++) {
+    //         console.log('Set Pixel', x, y);
+    //         if (spriteData[y][x]) {
+    //             drawPixel(ctx, x, y);
+    //         }
+    //     }
+    // }
+
+    // function drawPixel(context, x, y, color) {
+    //     var roundedX = Math.round(x);
+    //     var roundedY = Math.round(y);
+    //     context.fillStyle = color || '#000';
+    //     context.fillRect(roundedX, roundedY, 1, 1);
+    // }
+
+
+    // let spriteData = SPRITES.SHIP;
+    // for (let y = 0; y < spriteData.length; y++) {
+    //     console.log('Row', y);
+    //     for (let x = 0; x < spriteData[y].length; x++) {
+    //         // if (spriteData[y][x]) {
+    //         setPixel(shipImageData, x, y, spriteData[y][x] ? 0x333333 : 0x999999);
+    //         // }
+    //     }
+    // }
+
+    // ctx.putImageData(shipImageData, 0, 0)
+
+
+    // function setPixel(buffer, x, y, color) {
+    //     x = Math.round(x);
+    //     y = Math.round(y);
+    //     //if (x >= 0 && y >= 0 && x < viewport.x && y < viewport.y) {
+    //     const offset = ((y * 10) + x) * 4;
+    //     console.log(offset);
+    //     buffer.data[offset] = (color >> 16);
+    //     buffer.data[offset + 1] = (color >> 8) & 0xff;
+    //     buffer.data[offset + 2] = (color) & 0xff;
+    //     buffer.data[offset + 3] = 0xff;
+    //     // }
+    // }
+
+
+    function createSpriteImageData(spriteData) {
+        const spriteWidth = spriteData[0].length;
+        const spriteHeight = spriteData.length;
+        const spriteImageData = new ImageData(spriteWidth, spriteHeight);
+
+        console.log(spriteImageData);
+
+        for (let y = 0; y < spriteHeight; y++) {
+            for (let x = 0; x < spriteWidth; x++) {
+                setPixel(spriteImageData, x, y, spriteData[y][x] ? 0x333333 : 0x999999);
+            }
+        }
+
+        return spriteImageData;
+    }
+
+
+    function setPixel(imageData, x, y, color) {
+        x = Math.round(x);
+        y = Math.round(y);
+        //if (x >= 0 && y >= 0 && x < viewport.x && y < viewport.y) {
+        const offset = ((y * imageData.width) + x) * 4;
+        imageData.data[offset] = (color >> 16);
+        imageData.data[offset + 1] = (color >> 8) & 0xff;
+        imageData.data[offset + 2] = (color) & 0xff;
+        imageData.data[offset + 3] = 0xff;
+        // }
+    }
+
+
+    const shipImageData = createSpriteImageData(SPRITES.SHIP)
+
+    ctx.putImageData(shipImageData, 0, 0)
+
+</script>
+
+
+
+</html>
