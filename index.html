@@ -131,6 +131,9 @@
     const SHIELD_HEIGHT = 40;
 
 
+    const USE_ANIMATION_FRAME = false;
+
+
     const debug = (str) => {
         document.querySelector('[debug-text]').innerText = str;
     }
@@ -232,7 +235,7 @@
 
         nextFrame() {
             this.currentFrame++;
-            if(this.currentFrame > this._animation.length - 1) {
+            if (this.currentFrame > this._animation.length - 1) {
                 this.currentFrame = 0;
             }
         }
@@ -245,6 +248,7 @@
             this.spriteImageDatas = {};
             this.sprites = [];
             this.spriteAnimations = {};
+            this.frameCount = 0;
         }
 
         addAnimation(name, spriteData) {
@@ -259,16 +263,16 @@
         }
 
         getAnimation(name) {
-            
+
             return this.spriteImageDatas[name];
         }
 
         // Pairing a gameItem with an animation state
         addAnimationSpriteState(gameItemID, animationName) {
-            
+
             const animation = this.getAnimation(animationName);
-            
-            if(!animation) {
+
+            if (!animation) {
                 return;
             }
             const spriteAnimation = new SpriteAnimation(animation);
@@ -278,8 +282,8 @@
         // this is always returning tank
         getAnimationSpriteState(gameItemID) {
             const state = this.spriteAnimations[gameItemID];
-            if(!state) {
-                console.log('No state found');
+            if (!state) {
+                //console.log('No state found');
                 return null;
             } else {
                 return state;
@@ -291,7 +295,7 @@
         drawToSprite(canvas, gameItemID) {
             const ctx = canvas.getContext('2d');
             const animationSpriteState = this.getAnimationSpriteState(gameItemID);
-            if(!animationSpriteState) {
+            if (!animationSpriteState) {
                 return;
             }
             const imageData = animationSpriteState.currentFrameSprite;
@@ -306,7 +310,7 @@
             const spriteHeight = spriteData.length;
             const spriteImageData = new ImageData(spriteWidth, spriteHeight);
 
-            
+
 
             for (let y = 0; y < spriteHeight; y++) {
                 for (let x = 0; x < spriteWidth; x++) {
@@ -329,14 +333,19 @@
         }
 
         update() {
-            for(var prop in this.spriteAnimations) {
-                const spriteAnimation = this.spriteAnimations[prop];
-                // TODO why is there sometimes not a spriteAnimation?
-                if(spriteAnimation) {
-                    
-                    spriteAnimation.nextFrame();
+            if (this.frameCount > 10000) {
+                for (var prop in this.spriteAnimations) {
+                    const spriteAnimation = this.spriteAnimations[prop];
+                    // TODO why is there sometimes not a spriteAnimation?
+                    if (spriteAnimation) {
+                        spriteAnimation.nextFrame();
+                    }
                 }
+                this.frameCount = 0;
             }
+            this.frameCount++;
+            //console.log('SpriteManager.frameCount', this.frameCount);
+
         }
 
     }
@@ -347,6 +356,7 @@
         constructor(model) {
             this.model = model;
             this.spriteManager = new SpriteManager();
+            this.frameCount = 0;
             //this.itemToSprite = {};
             // this.init();
         }
@@ -376,7 +386,7 @@
             //     // Set up animation states for each sprite in sprite manager
             //     this.spriteManager.addAnimationSpriteState(gameItem, gameItem.type);
             // })
-            
+
 
 
 
@@ -414,7 +424,7 @@
             //     this.spriteManager.drawToSprite(c, gameItem.id);
             // }
 
-            
+
 
             //e.innerText = gameItem.type;
             gameDiv.appendChild(e);
@@ -426,7 +436,7 @@
             //sprite.style.left = 2000 + 'px';
         }
 
-        render() {
+        render(renderCount) {
             const gameDiv = document.querySelector('[game-canvas]')
             this.model.sprites.forEach((gameItem) => {
                 const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
@@ -434,13 +444,23 @@
                 sprite.style.top = gameItem.y + 'px';
 
                 // Move animations on
-                this.spriteManager.update();
+                // todo - this isnt the place to do this, just a test
+                // if(renderCount % 100 === 0) {
+                //     this.spriteManager.update();
+                // }
 
                 //drawToSprite(canvas, gameItem)
                 const c = sprite.querySelector('canvas');
                 // this is where the issue is with everything being tank sprites
-                
+
+                this.frameCount++;
+
+                // if (this.frameCount % 100 == 0) {
+                this.spriteManager.update();
                 this.spriteManager.drawToSprite(c, gameItem.id);
+                // }
+
+
 
                 // Temp hide dead sprites
                 if (!gameItem.isAlive) {
@@ -493,6 +513,7 @@
             this.gameLoopsPerSecond = 100;
             this.isPaused = true;
             this.frameCount = 0;
+            this.renderCount = 0;
             this.gameInProgress = false;
             this.gameIsOver = false;
             this.keyboard = new KeyboardManager();
@@ -597,10 +618,16 @@
             this.isPaused = false;
             this.gameInProgress = true;
             this.renderer.render();
-            this.interval = setInterval(() => {
-                this.gameLoop()
-            }, Math.round(1000 / this.gameLoopsPerSecond));
-            // this.animationFrameGameLoop()
+
+
+            if (USE_ANIMATION_FRAME) {
+                this.animationFrameGameLoop()
+            } else {
+                this.interval = setInterval(() => {
+                    this.gameLoop();
+                    //this.renderLoop();
+                }, Math.round(1000 / this.gameLoopsPerSecond));
+            }
         }
 
         stop() {
@@ -894,13 +921,24 @@
                 this.gameOver();
             }
 
-            // if (!this.isPaused && this.gameInProgress) {
-            //     this.animationFrameGameLoop();
-            // }
 
-            if (this.isPaused || !this.gameInProgress) {
-                clearInterval(this.interval);
+            if (USE_ANIMATION_FRAME) {
+                if (!this.isPaused && this.gameInProgress) {
+                    this.animationFrameGameLoop();
+                }
+            } else {
+
+                if (this.isPaused || !this.gameInProgress) {
+                    clearInterval(this.interval);
+                }
             }
+        }
+
+
+        renderLoop() {
+            this.renderer.render(this.renderCount);
+            this.renderCount++;
+            //this.animationFrameGameLoop();
         }
 
 
