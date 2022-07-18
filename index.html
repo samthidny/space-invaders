@@ -48,10 +48,10 @@
             height: 100%;
         }
 
-        [enemy]::before {
+        /* [enemy]::before {
             content: "\1F47E";
             font-size: 1.5em;
-        }
+        } */
 
         [tank] {
             /* background-color: green; */
@@ -137,20 +137,49 @@
 
 
     const SPRITES = {
-        SHIP:
-            [
-                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
-                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-            ],
-
+        TANK:
+        {
+            colour: 0x00ff00,
+            frames: [
+                [
+                    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                ],
+            ]
+        },
+        ENEMY1: {
+            colour: 0xff0000,
+            frames: [
+                [
+                    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
+                    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 1, 0, 0, 0, 0, 1, 0, 0]
+                ],
+                [
+                    [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 1, 0, 1, 1, 0, 1, 0, 0],
+                    [0, 1, 0, 1, 0, 0, 1, 0, 1, 0]
+                ]
+            ]
+        }
 
 
     }
@@ -189,9 +218,24 @@
     }
 
 
-
     class SpriteAnimation {
 
+        constructor(animation) {
+            //this.gameItem = gameItem;
+            this._animation = animation;
+            this.currentFrame = 0;
+        }
+
+        get currentFrameSprite() {
+            return this._animation[this.currentFrame];
+        }
+
+        nextFrame() {
+            this.currentFrame++;
+            if(this.currentFrame > this._animation.length - 1) {
+                this.currentFrame = 0;
+            }
+        }
     }
 
 
@@ -199,34 +243,74 @@
 
         constructor() {
             this.spriteImageDatas = {};
+            this.sprites = [];
+            this.spriteAnimations = {};
+        }
+
+        addAnimation(name, spriteData) {
+            const arr = [];
+            for (let i = 0; i < spriteData.frames.length; i++) {
+
+                const imageData = this.createSpriteImageData(spriteData.frames[i], spriteData.colour);
+                arr.push(imageData);
+
+            }
+            this.spriteImageDatas[name] = arr;
+        }
+
+        getAnimation(name) {
+            
+            return this.spriteImageDatas[name];
+        }
+
+        // Pairing a gameItem with an animation state
+        addAnimationSpriteState(gameItemID, animationName) {
+            
+            const animation = this.getAnimation(animationName);
+            
+            if(!animation) {
+                return;
+            }
+            const spriteAnimation = new SpriteAnimation(animation);
+            this.spriteAnimations[gameItemID] = spriteAnimation;
+        }
+
+        // this is always returning tank
+        getAnimationSpriteState(gameItemID) {
+            const state = this.spriteAnimations[gameItemID];
+            if(!state) {
+                console.log('No state found');
+                return null;
+            } else {
+                return state;
+            }
+            //return this.spriteAnimations[gameItem];
         }
 
 
-        addSprite(name, spriteData) {
-            const imageData = this.createSpriteImageData(spriteData);
-            this.spriteImageDatas[name] = imageData;
-        }
-
-
-        drawToSprite(canvas, gameItem) {
+        drawToSprite(canvas, gameItemID) {
             const ctx = canvas.getContext('2d');
-            const imageData = this.spriteImageDatas[gameItem.type];
+            const animationSpriteState = this.getAnimationSpriteState(gameItemID);
+            if(!animationSpriteState) {
+                return;
+            }
+            const imageData = animationSpriteState.currentFrameSprite;
+            // const imageData = this.spriteImageDatas[gameItem.type][0];
             canvas.width = imageData.width;
             canvas.height = imageData.height;
-            // ctx.scale(3, 3);
             ctx.putImageData(imageData, 0, 0);
         }
 
-        createSpriteImageData(spriteData) {
+        createSpriteImageData(spriteData, colour) {
             const spriteWidth = spriteData[0].length;
             const spriteHeight = spriteData.length;
             const spriteImageData = new ImageData(spriteWidth, spriteHeight);
 
-            console.log(spriteImageData);
+            
 
             for (let y = 0; y < spriteHeight; y++) {
                 for (let x = 0; x < spriteWidth; x++) {
-                    this.setPixel(spriteImageData, x, y, spriteData[y][x] ? 0x333333 : null);
+                    this.setPixel(spriteImageData, x, y, spriteData[y][x] ? colour : null);
                 }
             }
 
@@ -244,7 +328,16 @@
             imageData.data[offset + 3] = color === null ? 0 : 0xff;
         }
 
-
+        update() {
+            for(var prop in this.spriteAnimations) {
+                const spriteAnimation = this.spriteAnimations[prop];
+                // TODO why is there sometimes not a spriteAnimation?
+                if(spriteAnimation) {
+                    
+                    spriteAnimation.nextFrame();
+                }
+            }
+        }
 
     }
 
@@ -274,8 +367,18 @@
             // Set up sprite data
 
             // Add sprite animations by name
-            this.spriteManager.addSprite('tank', SPRITES.SHIP);
-            // this.spriteManager.addSprite('enemy1', SPRITES.ALIEN1);
+            this.spriteManager.addAnimation('enemy', SPRITES.ENEMY1);
+            this.spriteManager.addAnimation('tank', SPRITES.TANK);
+
+
+
+            // this.model.sprites.forEach((gameItem) => {
+            //     // Set up animation states for each sprite in sprite manager
+            //     this.spriteManager.addAnimationSpriteState(gameItem, gameItem.type);
+            // })
+            
+
+
 
             this.model.sprites.forEach((gameItem) => {
                 this.addSprite(gameItem);
@@ -284,8 +387,6 @@
         }
 
         addSprite(gameItem) {
-
-            console.log('renderer addSprite ', gameItem.type)
 
             const gameDiv = document.querySelector('[game-canvas]')
             const e = document.createElement('div');
@@ -307,9 +408,13 @@
             c.setAttribute('height', gameItem.height);
             e.appendChild(c);
 
-            if(gameItem.type === 'tank') {
-                this.spriteManager.drawToSprite(c, gameItem);
-            }
+            this.spriteManager.addAnimationSpriteState(gameItem.id, gameItem.type);
+
+            // if (gameItem.type === 'tank' || gameItem.type === 'enemy') {
+            //     this.spriteManager.drawToSprite(c, gameItem.id);
+            // }
+
+            
 
             //e.innerText = gameItem.type;
             gameDiv.appendChild(e);
@@ -327,11 +432,15 @@
                 const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
                 sprite.style.left = gameItem.x + 'px';
                 sprite.style.top = gameItem.y + 'px';
-                //sprite.innerText = gameItem[gameItem?.debugData] || '';
 
+                // Move animations on
+                this.spriteManager.update();
 
-                // Set animation sprite
-
+                //drawToSprite(canvas, gameItem)
+                const c = sprite.querySelector('canvas');
+                // this is where the issue is with everything being tank sprites
+                
+                this.spriteManager.drawToSprite(c, gameItem.id);
 
                 // Temp hide dead sprites
                 if (!gameItem.isAlive) {
@@ -434,6 +543,7 @@
             // Create Enemies
             for (var y = 0; y < NUM_ENEMY_ROWS; y++) {
                 for (var x = 0; x < 11; x++) {
+                    const enemyType = 'enemy' + (y + 1)
                     this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + this.enemyStartY, ENEMY_SIZE, ENEMY_SIZE, { column: x, row: y }));
                 }
             }
