@@ -182,16 +182,66 @@
                     [0, 1, 0, 1, 0, 0, 1, 0, 1, 0]
                 ]
             ]
+        },
+        ENEMY2: {
+            colour: 0x00ff00,
+            frames: [
+                [
+                    [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+                    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+                    [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+                    [0, 0, 0, 1, 0, 0, 1, 0, 0, 0]
+                ],
+                [
+                    [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+                    [1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+                    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+                    [1, 1, 1, 0, 1, 1, 0, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+                    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0]
+                ]
+            ]
+        },
+        ENEMY3: {
+            colour: 0x0000ff,
+            frames: [
+                [
+                    [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
+                    [1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
+                    [0, 1, 1, 0, 0, 0, 0, 1, 1, 0]
+                ]
+            ]
         }
 
 
     }
 
 
+
+
+
+
+
+
+
+
+
     class GameItem {
 
         constructor(type, x, y, width, height, metadata) {
             this.type = type;
+            this.sprite = type;
             this.x = x;
             this.y = y;
             this.width = width || DEFAULT_SPRITE_SIZE;
@@ -377,8 +427,14 @@
             // Set up sprite data
 
             // Add sprite animations by name
-            this.spriteManager.addAnimation('enemy', SPRITES.ENEMY1);
             this.spriteManager.addAnimation('tank', SPRITES.TANK);
+            this.spriteManager.addAnimation('enemy', SPRITES.ENEMY1);
+            this.spriteManager.addAnimation('enemy1', SPRITES.ENEMY1);
+            this.spriteManager.addAnimation('enemy2', SPRITES.ENEMY2);
+            this.spriteManager.addAnimation('enemy3', SPRITES.ENEMY2);
+            this.spriteManager.addAnimation('enemy4', SPRITES.ENEMY3);
+            this.spriteManager.addAnimation('enemy5', SPRITES.ENEMY3);
+
 
 
 
@@ -418,7 +474,7 @@
             c.setAttribute('height', gameItem.height);
             e.appendChild(c);
 
-            this.spriteManager.addAnimationSpriteState(gameItem.id, gameItem.type);
+            this.spriteManager.addAnimationSpriteState(gameItem.id, gameItem.sprite || gameItem.type);
 
             // if (gameItem.type === 'tank' || gameItem.type === 'enemy') {
             //     this.spriteManager.drawToSprite(c, gameItem.id);
@@ -564,8 +620,10 @@
             // Create Enemies
             for (var y = 0; y < NUM_ENEMY_ROWS; y++) {
                 for (var x = 0; x < 11; x++) {
-                    const enemyType = 'enemy' + (y + 1)
-                    this.model.addSprite(new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + this.enemyStartY, ENEMY_SIZE, ENEMY_SIZE, { column: x, row: y }));
+                    const enemyType = 'enemy' + (y + 1);
+                    const enemyGameItem = new GameItem('enemy', (ENEMY_SIZE + ENEMY_X_SPACE) * x, ((ENEMY_SIZE + ENEMY_Y_SPACE) * y) + this.enemyStartY, ENEMY_SIZE, ENEMY_SIZE, { column: x, row: y, sprite: enemyType })
+                    enemyGameItem.sprite = enemyType;
+                    this.model.addSprite(enemyGameItem);
                 }
             }
 
