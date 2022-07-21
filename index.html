@@ -35,8 +35,10 @@
         }
 
         [game-canvas] {
+            border: 1px solid red;
             position: absolute;
-            height: 500px;
+            height: 488px;
+            width: 512px;
         }
 
         [sprite] {
@@ -94,9 +96,9 @@
             </div>
             <!-- Game container takes up the space as game-canvas is absolute -->
             <div game-canvas-container>
-                <div game-canvas>
+                <canvas game-canvas width="256" height="244">
                     Game
-                </div>
+                </canvas>
             </div>
             <div game-footer>
                 <h3>Footer</h3>
@@ -108,16 +110,16 @@
 
 <script>
 
-    const GAME_WIDTH = 500;
-    const GAME_HEIGHT = 500;
+    const GAME_WIDTH = 256;
+    const GAME_HEIGHT = 224;
     const DEFAULT_SPRITE_SIZE = 32;
 
     const TANK_SPEED = 2;
 
-    const NUM_ENEMY_ROWS = 1;
-    const ENEMY_SIZE = 24;
-    const ENEMY_X_SPACE = 17;
-    const ENEMY_Y_SPACE = 15;
+    const NUM_ENEMY_ROWS = 5;
+    const ENEMY_SIZE = 10;
+    const ENEMY_X_SPACE = 5;
+    const ENEMY_Y_SPACE = 5;
     const ENEMY_GROUND_LIMIT = 370;
 
     const MISSILE_SPEED = 6;
@@ -233,6 +235,24 @@
                     [0, 0, 1, 1, 0, 0, 1, 1, 0, 0]
                 ]
             ]
+        },
+        MISSILE: {
+            colour: 0x00ff00,
+            frames: [
+                [
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    
+                ]
+            ]
         }
 
 
@@ -287,7 +307,7 @@
             const aliveSprites = this.sprites.filter(gameItem => gameItem.isAlive);
             this.sprites = aliveSprites;
             this.numSprites = aliveSprites.length;
-            
+
         }
 
     }
@@ -459,8 +479,6 @@
             this.spriteManager.addAnimation('enemy5', SPRITES.ENEMY3);
 
 
-
-
             // this.model.sprites.forEach((gameItem) => {
             //     // Set up animation states for each sprite in sprite manager
             //     this.spriteManager.addAnimationSpriteState(gameItem, gameItem.type);
@@ -560,6 +578,186 @@
     }
 
 
+
+    class CanvasRenderer {
+
+        constructor(model, canvas) {
+            this.model = model;
+            this.spriteManager = new SpriteManager();
+            this.frameCount = 0;
+            this.canvas = canvas;
+            this.context = this.canvas.getContext('2d');
+            // this.context.scale(2, 2);
+            this.sprites = [];
+        }
+
+        clear() {
+            this.context.clearRect(0, 0, this.model.gameWidth, this.model.gameWidth)
+        }
+
+        init() {
+
+            // Set up sprite data
+
+            // Add sprite animations by name
+            this.spriteManager.addAnimation('tank', SPRITES.TANK);
+            this.spriteManager.addAnimation('enemy', SPRITES.ENEMY1);
+            this.spriteManager.addAnimation('enemy1', SPRITES.ENEMY1);
+            this.spriteManager.addAnimation('enemy2', SPRITES.ENEMY2);
+            this.spriteManager.addAnimation('enemy3', SPRITES.ENEMY2);
+            this.spriteManager.addAnimation('enemy4', SPRITES.ENEMY3);
+            this.spriteManager.addAnimation('enemy5', SPRITES.ENEMY3);
+            this.spriteManager.addAnimation('missile', SPRITES.MISSILE);
+
+
+
+            this.model.sprites.forEach((gameItem) => {
+                this.addSprite(gameItem);
+                //this.itemToSprite[gameItem] = e;
+            })
+        }
+
+
+        addSprite(gameItem) {
+            
+            this.sprites.push(gameItem.id);
+            this.spriteManager.addAnimationSpriteState(gameItem.id, gameItem.sprite || gameItem.type);
+        }
+
+        _addSprite(gameItem) {
+
+            const gameDiv = document.querySelector('[game-canvas]')
+            const e = document.createElement('div');
+            e.setAttribute('sprite', true);
+            e.setAttribute('itemID', gameItem.id);
+            e.setAttribute(gameItem.type, true);
+
+            for (let prop in gameItem.metadata) {
+                e.setAttribute(prop, gameItem.metadata[prop]);
+            }
+
+            // Set size in css
+            e.style.width = `${gameItem.width}px`;
+            e.style.height = `${gameItem.height}px`;
+
+            //Add canvas to div
+            const c = document.createElement('canvas');
+            c.setAttribute('width', gameItem.width);
+            c.setAttribute('height', gameItem.height);
+            e.appendChild(c);
+
+            this.spriteManager.addAnimationSpriteState(gameItem.id, gameItem.sprite || gameItem.type);
+
+            // if (gameItem.type === 'tank' || gameItem.type === 'enemy') {
+            //     this.spriteManager.drawToSprite(c, gameItem.id);
+            // }
+
+
+
+            //e.innerText = gameItem.type;
+            gameDiv.appendChild(e);
+            return e;
+        }
+
+        removeSprite(gameItem) {
+            //const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
+            //sprite.style.left = 2000 + 'px';
+        }
+
+
+        render(renderCount) {
+
+            this.clear();
+
+            this.model.sprites.forEach((gameItem) => {
+
+                // Update animations of sprites
+                // this.spriteManager.update();
+                // this.spriteManager.drawToSprite(c, gameItem.id);
+
+                if(gameItem.type === 'missile') {
+                    // debugger;
+                }
+
+                if (gameItem.isAlive) {
+                    const animationSpriteState = this.spriteManager.getAnimationSpriteState(gameItem.id);
+                    if (animationSpriteState) {
+                        const imageData = animationSpriteState.currentFrameSprite;
+                        this.context.putImageData(imageData, gameItem.x, gameItem.y);
+                    }
+                }
+
+                // Temp hide dead sprites
+                // if (!gameItem.isAlive) {
+                //     sprite.parentElement.removeChild(sprite);
+                //     sprite.style.display = 'none';
+                // }
+
+            })
+
+
+            // TODO - move these out of renderer
+            document.querySelector('[game-footer]').innerText = `LIVES: ${this.model.lives}`;
+            document.querySelector('[score-text]').innerText = `${this.model.score}`;
+
+
+        }
+
+        _render(renderCount) {
+            const gameDiv = document.querySelector('[game-canvas]')
+            this.model.sprites.forEach((gameItem) => {
+                const sprite = gameDiv.querySelector(`[itemID="${gameItem.id}"]`) || this.addSprite(gameItem);
+                sprite.style.left = gameItem.x + 'px';
+                sprite.style.top = gameItem.y + 'px';
+
+                // Move animations on
+                // todo - this isnt the place to do this, just a test
+                // if(renderCount % 100 === 0) {
+                //     this.spriteManager.update();
+                // }
+
+                //drawToSprite(canvas, gameItem)
+                const c = sprite.querySelector('canvas');
+                // this is where the issue is with everything being tank sprites
+
+                // this.frameCount++;
+
+                // if (this.frameCount % 100 == 0) {
+                this.spriteManager.update();
+                this.spriteManager.drawToSprite(c, gameItem.id);
+                // }
+
+
+
+                // Temp hide dead sprites
+                if (!gameItem.isAlive) {
+                    sprite.parentElement.removeChild(sprite);
+                    sprite.style.display = 'none';
+                }
+
+            })
+
+
+
+            document.querySelector('[game-footer]').innerText = `LIVES: ${this.model.lives}`;
+            document.querySelector('[score-text]').innerText = `${this.model.score}`;
+
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     class KeyboardManager {
 
 
@@ -601,7 +799,10 @@
             this.model = new GameModel();
 
             this.interval = null;
-            this.renderer = new Renderer(this.model);
+            //this.renderer = new Renderer(this.model);
+
+            const canvas = document.querySelector('[game-canvas]')
+            this.renderer = new CanvasRenderer(this.model, canvas);
 
 
             // Initial game values
@@ -750,16 +951,16 @@
                 [4, 5],
                 [3, 4],
                 [2, 3],
-                [1, 2]     
+                [1, 2]
             ];
 
             // TODO - ES6/functional way of doing this
-            for(let i = 0; i < sectors.length; i++) {
+            for (let i = 0; i < sectors.length; i++) {
                 if (numEnemies >= sectors[i][0]) {
                     return sectors[i][1];
                 }
             }
-            
+
         }
 
 
@@ -812,7 +1013,9 @@
 
             // Create Missile
             if (this.fireMissile) {
-                this.model.addSprite(new GameItem('missile', this.tank.x + (this.tank.width * 0.5), this.tank.y, MISSILE_WIDTH, MISSILE_HEIGHT));
+                const missileGameItem = this.model.addSprite(new GameItem('missile', this.tank.x + (this.tank.width * 0.5), this.tank.y, MISSILE_WIDTH, MISSILE_HEIGHT));
+                // TODO - make this event driven so mode ADD/REMOVE events add sprite
+                this.renderer.addSprite(missileGameItem);
                 this.fireMissile = false;
             }
 
