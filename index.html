@@ -107,27 +107,33 @@
 
 
 <script>
+    const NUM_LIVES = 3;
 
     const GAME_WIDTH = 500;
     const GAME_HEIGHT = 500;
     const DEFAULT_SPRITE_SIZE = 32;
 
     const TANK_SPEED = 2;
+    const TANK_MARGIN = 20;
 
     const NUM_ENEMY_ROWS = 5;
-    const ENEMY_SPEED = 4;
+    const ENEMY_SPEED = 5;
     const ENEMY_SIZE = 24;
-    const ENEMY_X_SPACE = 17;
+    const ENEMY_X_SPACE = 15;
     const ENEMY_Y_SPACE = 15;
     const ENEMY_GROUND_LIMIT = 370;
-    const ENEMY_STAGGER_FRAMES = 40;
+    const ENEMY_STAGGER_FRAMES_MAX = 50;
+    const ENEMY_STAGGER_FRAMES_MIN = 1;
+    const ENEMY_LEVEL_INCREASE_Y = 20;
+    
+    const GAME_LOOPS_PER_SECOND = 100;
 
     const MISSILE_SPEED = 6;
     const MISSILE_WIDTH = 1;
     const MISSILE_HEIGHT = 6;
-    const MAX_ACTIVE_MISSILES = 30;
+    const MAX_ACTIVE_MISSILES = 1;
 
-    const BOMB_SPEED = 3;
+    const BOMB_SPEED = 2;
     const MAX_BOMBS = 1;
 
     const SHIELD_WIDTH = 60;
@@ -261,6 +267,8 @@
             this.height = height || DEFAULT_SPRITE_SIZE;
             this.isAlive = true;
             this.metadata = metadata;
+            this.halfWidth = width * 0.5;
+            this.halfHeight = height * 0.5;
         }
 
     }
@@ -592,7 +600,7 @@
         }
 
         init() {
-            this.gameLoopsPerSecond = 100;
+            this.gameLoopsPerSecond = GAME_LOOPS_PER_SECOND;
             this.isPaused = true;
             this.frameCount = 0;
             this.renderCount = 0;
@@ -607,9 +615,9 @@
 
 
             // Initial game values
-            this.model.lives = 30;
+            this.model.lives = NUM_LIVES;
             this.model.score = 0;
-            this.enemyStaggerFrequency = ENEMY_STAGGER_FRAMES;
+            this.enemyStaggerFrequency = ENEMY_STAGGER_FRAMES_MAX;
             this.maxActiveBombs = 1;
 
             this.enemyStartY = 50;
@@ -655,10 +663,12 @@
             const createShield = (xPos, yPos) => {
                 for (let y = 0; y < 5; y++) {
                     for (let x = 0; x < 6; x++) {
-                        const blockSize = 10;
+                        // const blockSize = 10;
+                        const blockWidth = 10;
+                        const blockHeight = 10;
                         const skip = y === 4 && x > 1 && x < 4;
                         if (!skip) {
-                            this.model.addSprite(new GameItem('shield', xPos + (blockSize * x), yPos + (blockSize * y), blockSize, blockSize));
+                            this.model.addSprite(new GameItem('shield', xPos + (blockWidth * x), yPos + (blockHeight * y), blockWidth, blockHeight));
                         }
                     }
                 }
@@ -733,27 +743,6 @@
 
         calculateEnemyStaggerFrequency(numEnemies) {
             // For now hard coding this but needs some kind of "hockey curve" formula getting much faster at the end
-            // const sectors = [
-            //     [55, 20],
-            //     [50, 19],
-            //     [45, 18],
-            //     [40, 17],
-            //     [35, 16],
-            //     [30, 15],
-            //     [25, 13],
-            //     [20, 12],
-            //     [15, 10],
-            //     [10, 10],
-            //     [9, 9],
-            //     [8, 9],
-            //     [7, 8],
-            //     [6, 7],
-            //     [5, 6],
-            //     [4, 5],
-            //     [3, 4],
-            //     [2, 3],
-            //     [1, 2]     
-            // ];
 
             const sectors = [
                 [55, 1],
@@ -764,29 +753,31 @@
                 [30, 0.75],
                 [25, 0.7],
                 [20, 0.6],
-                [15, 0.55],
-                [10, 0.5],
-                [9, 0.45],
-                [8, 0.4],
-                [7, 0.35],
-                [6, 0.3],
-                [5, 0.25],
-                [4, 0.2],
-                [3, 0.15],
-                [2, 0.1],
-                [1, 0.05]   
+                [15, 0.5],
+                [10, 0.4],
+                [9, 0.35],
+                [8, 0.3],
+                [7, 0.25],
+                [6, 0.2],
+                [5, 0.15],
+                [4, 0.1],
+                [3, 0.07],
+                [2, 0.05],
+                [1, 0.01]   
             ];
 
             // TODO - ES6/functional way of doing this
+
+            const range = ENEMY_STAGGER_FRAMES_MAX - ENEMY_STAGGER_FRAMES_MIN;
+
             for(let i = 0; i < sectors.length; i++) {
                 if (numEnemies >= sectors[i][0]) {
                     const fraction = sectors[i][1];
-                    const stagger = Math.ceil(fraction * ENEMY_STAGGER_FRAMES);
-                    console.log('new stagger ', numEnemies, stagger);
+                    const stagger = ENEMY_STAGGER_FRAMES_MIN + Math.ceil(fraction * range);
+                    console.log('new stagger ', numEnemies, fraction, stagger);
                     return stagger;
                 }
             }
-            
         }
 
 
@@ -803,7 +794,7 @@
             //this.speedUpEnemyMovement();
             //this.maxActiveBombs++;
 
-            this.enemyStartY += 5;
+            this.enemyStartY += ENEMY_LEVEL_INCREASE_Y;
             this.initLevel();
         }
 
@@ -827,14 +818,22 @@
 
             // Move all sprites before calculating anything
 
+            const tankWallLeft = TANK_MARGIN;
+            const tankWallRight = GAME_WIDTH - (TANK_MARGIN + this.tank.width);
 
             // Move Tank
             if (this.keyboard.keyDown['ArrowRight']) {
                 this.tank.x += this.tankSpeed;
+                if(this.tank.x > tankWallRight) {
+                    this.tank.x = tankWallRight;
+                }
             }
 
             if (this.keyboard.keyDown['ArrowLeft']) {
                 this.tank.x -= this.tankSpeed;
+                if(this.tank.x < tankWallLeft) {
+                    this.tank.x = tankWallLeft;
+                }
             }
 
             // Create Missile
@@ -875,7 +874,7 @@
                     //}
 
                     // TODO - We will need to keep track of min - max rows
-                    if (gameSprite.metadata.row === 0) {
+                    // if (gameSprite.metadata.row === 0) {
                         // Check if hit right wall
                         if (this.enemyDirection > 0 && (gameSprite.x + gameSprite.width) >= this.model.gameWidth) {
                             enemiesHitWall = true;
@@ -885,7 +884,7 @@
                         if (this.enemyDirection < 0 && gameSprite.x <= 0) {
                             enemiesHitWall = true;
                         }
-                    }
+                    // }
                 })
 
                 // change currentEnemyRow
