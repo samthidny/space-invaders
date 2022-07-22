@@ -112,22 +112,27 @@
 
     const GAME_WIDTH = 256;
     const GAME_HEIGHT = 224;
-    const DEFAULT_SPRITE_SIZE = 32;
+
 
     const TANK_SPEED = 2;
+    const TANK_WIDTH = 10;
+    const TANK_HEIGHT = 10;
 
     const NUM_ENEMY_ROWS = 5;
     const ENEMY_SIZE = 10;
     const ENEMY_X_SPACE = 5;
     const ENEMY_Y_SPACE = 5;
     const ENEMY_GROUND_LIMIT = 370;
+    const ENEMY_SPEED = 3;
 
     const MISSILE_SPEED = 6;
-    const MISSILE_WIDTH = 1;
+    const MISSILE_WIDTH = 2;
     const MISSILE_HEIGHT = 6;
     const MAX_ACTIVE_MISSILES = 30;
 
     const BOMB_SPEED = 3;
+    const BOMB_WIDTH = 2;
+    const BOMB_HEIGHT = 6;
     const MAX_BOMBS = 1;
 
     const SHIELD_WIDTH = 60;
@@ -240,17 +245,12 @@
             colour: 0x00ff00,
             frames: [
                 [
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    
+                [1, 1],
+                [1, 1],
+                [1, 1],
+                [1, 1],
+                [1, 1],
+                [1, 1]
                 ]
             ]
         }
@@ -275,8 +275,8 @@
             this.sprite = type;
             this.x = x;
             this.y = y;
-            this.width = width || DEFAULT_SPRITE_SIZE;
-            this.height = height || DEFAULT_SPRITE_SIZE;
+            this.width = width;
+            this.height = height;
             this.isAlive = true;
             this.metadata = metadata;
         }
@@ -870,12 +870,12 @@
             }
 
             this.enemyDirection = 1;
-            this.enemySpeed = 6;
+            this.enemySpeed = ENEMY_SPEED;
             this.enemyStaggerFrequency = this.enemyStaggerFrequency = this.calculateEnemyStaggerFrequency(55);
             this.moveEnemyCount = 0;
 
             // Create Tank
-            this.tank = this.model.addSprite(new GameItem('tank', this.model.gameWidth / 2, this.model.gameHeight - DEFAULT_SPRITE_SIZE));
+            this.tank = this.model.addSprite(new GameItem('tank', this.model.gameWidth / 2, this.model.gameHeight - TANK_HEIGHT, TANK_WIDTH, TANK_HEIGHT));
             this.tankSpeed = TANK_SPEED;
             this.fireMissile = false;
         }
@@ -1021,7 +1021,7 @@
 
             // Create Enemy Bomb
             if (this.fireBomb && this.firingEnemy && this.numActiveBombs < this.maxActiveBombs) {
-                this.model.addSprite(new GameItem('bomb', this.firingEnemy.x + (DEFAULT_SPRITE_SIZE * 0.5), this.firingEnemy.y + (DEFAULT_SPRITE_SIZE * 0.5), 2, 20));
+                this.model.addSprite(new GameItem('bomb', this.firingEnemy.x + (BOMB_WIDTH * 0.5), this.firingEnemy.y + (BOMB_HEIGHT * 0.5), 2, 20));
                 this.fireBomb = false;
                 this.numActiveBombs++;
                 this.firingEnemy = null;
@@ -1168,8 +1168,8 @@
                         //     this.speedUpEnemyMovement();
                         // }
 
-                        this.enemyStaggerFrequency = this.calculateEnemyStaggerFrequency(enemies.length);
-                        // debug('enemyStaggerFrequency ' + this.enemyStaggerFrequency);
+                        this.enemyStaggerFrequency = this.calculateEnemyStaggerFrequency(enemies.length-1);
+                        debug('enemyStaggerFrequency ' + this.enemyStaggerFrequency);
                     }
                 })
 
@@ -1268,7 +1268,7 @@
             // Clean up dead sprites
             this.model.removeDeadSprites();
 
-            debug('Model.numSprites = ' + this.model.numSprites);
+            // debug('Model.numSprites = ' + this.model.numSprites);
 
         }
 
