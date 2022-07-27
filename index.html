@@ -88,9 +88,9 @@
                 <div>SCORE: <span score-text>0</span></div>
                 <div>DEBUG: <span debug-text>xxx</span></div>
 
-                <button onclick="start()">Play</button>
-                <button onclick="stop()">Pause</button>
-                <button onclick="nextLevel()">Next Level</button>
+                <button onclick="window.game.start()">Play</button>
+                <button onclick="window.game.stop()">Pause</button>
+                <button onclick="window.game.nextLevel()">Next Level</button>
 
             </div>
             <!-- Game container takes up the space as game-canvas is absolute -->
@@ -107,14 +107,14 @@
 </body>
 
 
-<script>
+<script type="module" >
     const NUM_LIVES = 3;
 
     const GAME_WIDTH = 500;
     const GAME_HEIGHT = 500;
     const DEFAULT_SPRITE_SIZE = 32;
 
-    const TANK_SPEED = 2;
+    const TANK_SPEED = 1.5;
     const TANK_MARGIN = 20;
 
     const NUM_ENEMY_ROWS = 5;
@@ -252,27 +252,27 @@
 
 
 
+    import { GameItem } from './game-item.js';
 
 
 
 
+    // class GameItem {
 
-    class GameItem {
+    //     constructor(type, x, y, width, height, metadata) {
+    //         this.type = type;
+    //         this.sprite = type;
+    //         this.x = x;
+    //         this.y = y;
+    //         this.width = width || DEFAULT_SPRITE_SIZE;
+    //         this.height = height || DEFAULT_SPRITE_SIZE;
+    //         this.isAlive = true;
+    //         this.metadata = metadata;
+    //         this.halfWidth = width * 0.5;
+    //         this.halfHeight = height * 0.5;
+    //     }
 
-        constructor(type, x, y, width, height, metadata) {
-            this.type = type;
-            this.sprite = type;
-            this.x = x;
-            this.y = y;
-            this.width = width || DEFAULT_SPRITE_SIZE;
-            this.height = height || DEFAULT_SPRITE_SIZE;
-            this.isAlive = true;
-            this.metadata = metadata;
-            this.halfWidth = width * 0.5;
-            this.halfHeight = height * 0.5;
-        }
-
-    }
+    // }
 
     class GameModel {
 
@@ -687,7 +687,7 @@
             this.moveEnemyCount = 0;
 
             // Create Tank
-            this.tank = this.model.addSprite(new GameItem('tank', this.model.gameWidth / 2, this.model.gameHeight - DEFAULT_SPRITE_SIZE));
+            this.tank = this.model.addSprite(new GameItem('tank', this.model.gameWidth / 2, this.model.gameHeight - DEFAULT_SPRITE_SIZE, 24, 24));
             this.tankSpeed = TANK_SPEED;
             this.fireMissile = false;
         }
@@ -1026,9 +1026,7 @@
                 if (isHit(bomb, this.tank)) {
                     bomb.isAlive = false;
                     this.numActiveBombs--;
-                    if (this.numActiveBombs < 0) {
-                        this.numActiveBombs = 0;
-                    }
+                    
                     this.tank.lives--;
                     this.model.lives--;
                     // TODO - Tank Hit!!!
@@ -1046,6 +1044,10 @@
                 if (bomb.y > this.model.gameHeight) {
                     bomb.isAlive = false;
                     this.numActiveBombs--;
+                }
+
+                if (this.numActiveBombs < 0) {
+                    this.numActiveBombs = 0;
                 }
             })
 
@@ -1107,21 +1109,21 @@
     }
 
 
-    const game = new Game();
-    game.init();
+    window.game = new Game();
+    window.game.init();
 
-    function start() {
-        game.start();
-    }
+    // function start() {
+    //     game.start();
+    // }
 
-    function stop() {
-        game.stop();
-    }
+    // function stop() {
+    //     game.stop();
+    // }
 
-    function nextLevel() {
-        game.start();
-        game.nextLevel();
-    }
+    // function nextLevel() {
+    //     game.start();
+    //     game.nextLevel();
+    // }
 
 
 
