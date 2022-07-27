@@ -122,14 +122,16 @@
     const ENEMY_SIZE = 24;
     const ENEMY_X_SPACE = 15;
     const ENEMY_Y_SPACE = 15;
-    const ENEMY_GROUND_LIMIT = 370;
+    const ENEMY_SHIELD_LIMIT = 360;
+    const ENEMY_GROUND_LIMIT = 400;
+    
     const ENEMY_STAGGER_FRAMES_MAX = 50;
     const ENEMY_STAGGER_FRAMES_MIN = 1;
     const ENEMY_LEVEL_INCREASE_Y = 20;
     
     const GAME_LOOPS_PER_SECOND = 100;
 
-    const MISSILE_SPEED = 6;
+    const MISSILE_SPEED = 5;
     const MISSILE_WIDTH = 1;
     const MISSILE_HEIGHT = 6;
     const MAX_ACTIVE_MISSILES = 1;
@@ -614,6 +616,7 @@
             this.interval = null;
             this.renderer = new Renderer(this.model);
 
+            
 
             // Initial game values
             this.model.lives = NUM_LIVES;
@@ -680,6 +683,9 @@
             for (var x = 0; x < 4; x++) {
                 createShield(50 + (SHIELD_WIDTH * x) + (50 * x), 400);
             }
+
+            this.hasShields = true;
+            this.removeShields = false;
 
             this.enemyDirection = 1;
             this.enemySpeed = ENEMY_SPEED;
@@ -856,9 +862,19 @@
                 this.fireMysteryShip = false;
             }
 
+            
+
             const enemies = getLiveItems('enemy');
             const shields = getLiveItems('shield');
             const mysteryShips = getLiveItems('mystery-ship');
+
+
+
+            if(this.removeShields) {
+                shields.forEach(shield => shield.isAlive = false);
+                this.removeShields = false;
+                this.hasShields = false;
+            }
 
 
             if (enemies.length === 0) {
@@ -1053,6 +1069,11 @@
 
             // Any enemies hit the ground/shields
             enemies.forEach(enemy => {
+                if (this.hasShields && enemy.y >= ENEMY_SHIELD_LIMIT) {
+                    // Remove shields
+                    this.removeShields = true;
+
+                }
                 if (enemy.y >= ENEMY_GROUND_LIMIT) {
                     this.gameIsOver = true;
                 }
