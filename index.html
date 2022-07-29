@@ -13,14 +13,18 @@
             display: flex;
             width: 100vw;
             height: 100vh;
-            background-color: #333333;
+            background-color: black;
             align-items: center;
             justify-content: center;
         }
 
 
         [game-screen] {
-            background-color: black;
+            display: none;
+        }
+
+        [end-screen] {
+            display: none;
         }
 
         [game-header] {}
@@ -83,6 +87,10 @@
 <body>
 
     <div screen-container>
+        <div intro-screen>
+            <h1>SPACE INVADERS</h1>
+            <button onclick="startGame()">Start Game</button>
+        </div>
         <div game-screen>
             <div game-header>
                 <div>SCORE: <span score-text>0</span></div>
@@ -103,19 +111,53 @@
                 <h3>Footer</h3>
             </div>
         </div>
+        <div end-screen>
+            <h1>Game Over</h1>
+            <button onclick="restart()">Restart</button>
+        </div>
     </div>
 </body>
 
+<script>
+
+    function hideElement(element) {
+        element.style.display = 'none';
+    }
+
+    function showScreen(name) {
+        const screens = ['intro-screen', 'game-screen', 'end-screen'];
+        screens.forEach((screenName) => {
+            const el = window.document.querySelector(`[${screenName}]`);
+            el.style.display = screenName === name ? 'block' : 'none';
+        })
+    }
+
+    function startGame() {
+        console.log('Start Game');
+        showScreen('game-screen');
+        window.game.addEventListener('GAME_OVER', gameOverHandler);
+        window.game.start();
+
+    }
+
+    function gameOverHandler(event) {
+        showScreen('end-screen');
+    }
+
+    function restart() {
+        window.game.restart();
+        showScreen('intro-screen');
+    }
+</script>
 
 <script type="module">
- 
+
     import { Game } from './game.js';
 
     window.game = new Game();
     window.game.init();
 
 </script>
-
 
 
 </html>

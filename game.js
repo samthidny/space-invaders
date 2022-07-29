@@ -1,13 +1,13 @@
-import { BOMB_SPEED, DEFAULT_SPRITE_SIZE, ENEMY_GROUND_LIMIT, ENEMY_SIZE, ENEMY_STAGGER_FRAMES_MIN, ENEMY_STAGGER_FRAMES_MAX, ENEMY_X_SPACE, ENEMY_Y_SPACE, ENEMY_SPEED, ENEMY_SHIELD_LIMIT, GAME_LOOPS_PER_SECOND, GAME_WIDTH, GAME_HEIGHT, MAX_ACTIVE_MISSILES, MISSILE_WIDTH, MISSILE_HEIGHT, MISSILE_SPEED, NUM_ENEMY_ROWS, NUM_LIVES, SHIELD_WIDTH, TANK_SPEED, TANK_MARGIN, USE_ANIMATION_FRAME } from "./constants.js";
+import { BOMB_SPEED, DEFAULT_SPRITE_SIZE,  ENEMY_GROUND_LIMIT, ENEMY_SIZE, ENEMY_LEVEL_INCREASE_Y, ENEMY_STAGGER_FRAMES_MIN, ENEMY_STAGGER_FRAMES_MAX, ENEMY_X_SPACE, ENEMY_Y_SPACE, ENEMY_SPEED, ENEMY_SHIELD_LIMIT, GAME_LOOPS_PER_SECOND, GAME_WIDTH, GAME_HEIGHT, MAX_ACTIVE_MISSILES, MISSILE_WIDTH, MISSILE_HEIGHT, MISSILE_SPEED, NUM_ENEMY_ROWS, NUM_LIVES, SHIELD_WIDTH, TANK_SPEED, TANK_MARGIN, USE_ANIMATION_FRAME } from "./constants.js";
 import { GameItem } from "./game-item.js";
 import { GameModel } from "./game-model.js";
 import { KeyboardManager } from "./keyboard-manager.js";
 import { Renderer } from "./renderer.js";
 
-export class Game {
+export class Game extends EventTarget {
 
     constructor() {
-
+        super();
     }
 
     init() {
@@ -31,16 +31,17 @@ export class Game {
         this.initLevel()
 
         // Fire missile
-        document.addEventListener('keyup', (event) => {
-            if (event.code == 'Space' && this.numActiveMissiles < MAX_ACTIVE_MISSILES) {
-                this.fireMissile = true;
-                this.numActiveMissiles++;
-            }
-        });
+        document.addEventListener('keyup', this.keyUpHandler.bind(this));
 
         this.renderer.clear();
         this.renderer.init();
+    }
 
+    keyUpHandler(event) {
+        if (event.code == 'Space' && this.numActiveMissiles < MAX_ACTIVE_MISSILES) {
+            this.fireMissile = true;
+            this.numActiveMissiles++;
+        }
     }
 
     // Just resets the game without clearing game model data
@@ -107,6 +108,7 @@ export class Game {
     gameOver() {
         console.log('GAME OVER');
         this.stop();
+        this.dispatchEvent(new CustomEvent('GAME_OVER'));
     }
 
     start() {
@@ -131,10 +133,16 @@ export class Game {
 
     stop() {
         this.isPaused = true;
-        // clearInterval(this.interval);
+        clearInterval(this.interval);
         this.gameInProgress = false;
     }
 
+    restart() {
+        // Cleanup
+        //document.removeEventListener('keyup', this.keyUpHandler);
+
+        this.init();
+    }
 
     calculateEnemyStaggerFrequency(numEnemies) {
         // For now hard coding this but needs some kind of "hockey curve" formula getting much faster at the end
