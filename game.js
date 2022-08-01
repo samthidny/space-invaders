@@ -144,6 +144,17 @@ export class Game extends EventTarget {
         this.init();
     }
 
+
+    _calculateEnemyStaggerFrequency(numEnemies) {
+        const perc = numEnemies / 55;
+        const r = perc * perc;
+        const range = ENEMY_STAGGER_FRAMES_MAX - ENEMY_STAGGER_FRAMES_MIN;
+        const stagger = ENEMY_STAGGER_FRAMES_MIN + Math.ceil(r * range);
+        console.log('New Enemy Stagger', numEnemies, stagger);
+        return stagger;
+
+    }
+
     calculateEnemyStaggerFrequency(numEnemies) {
         // For now hard coding this but needs some kind of "hockey curve" formula getting much faster at the end
 
@@ -370,7 +381,7 @@ export class Game extends EventTarget {
         missiles.forEach(missile => {
 
             mysteryShips.forEach(mysteryShip => {
-                if (isHit(missile, mysteryShip)) {
+                if (this.numActiveMissiles && isHit(missile, mysteryShip)) {
                     mysteryShip.isAlive = false;
                     missile.isAlive = false;
                     this.numActiveMissiles--;
@@ -380,7 +391,7 @@ export class Game extends EventTarget {
             })
 
             enemies.forEach(enemy => {
-                if (isHit(missile, enemy)) {
+                if (this.numActiveMissiles && isHit(missile, enemy)) {
                     enemy.isAlive = false;
                     missile.isAlive = false;
                     this.numActiveMissiles--;
@@ -402,7 +413,7 @@ export class Game extends EventTarget {
             })
 
             shields.forEach(shield => {
-                if (isHit(missile, shield)) {
+                if (this.numActiveMissiles && isHit(missile, shield)) {
                     shield.isAlive = false;
 
                     //enemy.isAlive = false;

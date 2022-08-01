@@ -20,6 +20,21 @@ export class Renderer {
     init() {
 
         const SPRITES = {
+            MYSTERY_SHIP:
+            {
+                colour: 0xff0000,
+                frames: [
+                    [
+                        [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+                        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                        [0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                        [0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0],
+                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+                    ]
+                ]
+            },
             TANK:
             {
                 colour: 0x00ff00,
@@ -131,10 +146,8 @@ export class Renderer {
         this.spriteManager.addAnimation('enemy3', SPRITES.ENEMY2);
         this.spriteManager.addAnimation('enemy4', SPRITES.ENEMY3);
         this.spriteManager.addAnimation('enemy5', SPRITES.ENEMY3);
-
-
-
-
+        this.spriteManager.addAnimation('mystery-ship', SPRITES.MYSTERY_SHIP);
+       
         // this.model.sprites.forEach((gameItem) => {
         //     // Set up animation states for each sprite in sprite manager
         //     this.spriteManager.addAnimationSpriteState(gameItem, gameItem.type);
