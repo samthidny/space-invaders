@@ -23,6 +23,7 @@ export class Game extends EventTarget {
         this.renderer = new Renderer(this.model);
 
         // Initial game values
+        this.model.level = 1;
         this.model.lives = NUM_LIVES;
         this.model.score = 0;
         this.enemyStaggerFrequency = ENEMY_STAGGER_FRAMES_MAX;
@@ -145,9 +146,11 @@ export class Game extends EventTarget {
     }
 
 
-    _calculateEnemyStaggerFrequency(numEnemies) {
-        const perc = numEnemies / 55;
-        const r = perc * perc;
+    calculateEnemyStaggerFrequency(numEnemies) {
+       
+        const percRemaining = numEnemies / 55;
+        const percGone = 1 - percRemaining;
+        const r = 1 - (percGone * percGone);
         const range = ENEMY_STAGGER_FRAMES_MAX - ENEMY_STAGGER_FRAMES_MIN;
         const stagger = ENEMY_STAGGER_FRAMES_MIN + Math.ceil(r * range);
         console.log('New Enemy Stagger', numEnemies, stagger);
@@ -155,7 +158,7 @@ export class Game extends EventTarget {
 
     }
 
-    calculateEnemyStaggerFrequency(numEnemies) {
+    _calculateEnemyStaggerFrequency(numEnemies) {
         // For now hard coding this but needs some kind of "hockey curve" formula getting much faster at the end
 
         const sectors = [
@@ -207,7 +210,7 @@ export class Game extends EventTarget {
         // Set things like speed, num Missiles etc here
         //this.speedUpEnemyMovement();
         //this.maxActiveBombs++;
-
+        this.model.level += 1;
         this.enemyStartY += ENEMY_LEVEL_INCREASE_Y;
         this.initLevel();
     }

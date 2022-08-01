@@ -8,6 +8,7 @@ export class GameModel {
         this.gameWidth = GAME_WIDTH;
         this.gameHeight = GAME_HEIGHT;
         this.uniqueID = 0;
+        this.level = 1;
     }
 
     addSprite(gameItem) {

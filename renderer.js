@@ -238,6 +238,8 @@ export class Renderer {
 
         document.querySelector('[game-footer]').innerText = `LIVES: ${this.model.lives}`;
         document.querySelector('[score-text]').innerText = `${this.model.score}`;
+        document.querySelector('[level-text]').innerText = `${this.model.level}`;
+        
 
     }
 }
