@@ -1,0 +1,92 @@
+<html>
+
+
+<script>
+
+const audio = new (window.AudioContext || window.webkitAudioContext)();
+
+//square, sawtooth, triangle, sine
+function soundBullet(alien) {
+    const osc = audio.createOscillator();
+    if (alien) {
+        osc.type = 'sawtooth';
+    } else {
+        osc.type = 'triangle';
+    }
+    osc.frequency.value = 300;
+    for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+            osc.frequency.value += 20;
+        }, i * 10)
+    };
+
+    const vol = audio.createGain();
+
+    vol.gain.value = 0.1;
+    osc.connect(vol);
+
+    vol.connect(audio.destination)
+
+    osc.start();
+    osc.stop(audio.currentTime + 0.1);
+}
+
+let alienSoundToggle = false;
+function soundAlien(frequency) {
+    const osc = audio.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = frequency;
+
+    const vol = audio.createGain();
+
+    vol.gain.value = 0.8;
+    osc.connect(vol);
+
+    vol.connect(audio.destination)
+
+    osc.start();
+    osc.stop(audio.currentTime + 0.1);
+}
+
+function soundKill() {
+    const osc = audio.createOscillator();
+    osc.type = 'sawtooth';
+
+    osc.frequency.value = 500;
+    for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+            osc.frequency.value *= 0.8;
+        }, i * 10)
+    };
+
+    const vol = audio.createGain();
+
+    vol.gain.value = 0.05;
+    osc.connect(vol);
+
+    vol.connect(audio.destination)
+
+    osc.start();
+    osc.stop(audio.currentTime + 0.1);
+}
+
+
+const tune = [55, 50, 46, 65]
+let currentNote = 0;
+
+function playNote() {
+    soundAlien(tune[currentNote]);
+    currentNote++;
+    if(currentNote > tune.length - 1) {
+        currentNote = 0;
+    }
+
+}
+
+</script>
+
+
+
+<button onclick="playNote()">Alien</button>
+
+</html>

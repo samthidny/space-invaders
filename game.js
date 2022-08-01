@@ -1,8 +1,9 @@
-import { BOMB_SPEED, DEFAULT_SPRITE_SIZE,  ENEMY_GROUND_LIMIT, ENEMY_SIZE, ENEMY_LEVEL_INCREASE_Y, ENEMY_STAGGER_FRAMES_MIN, ENEMY_STAGGER_FRAMES_MAX, ENEMY_X_SPACE, ENEMY_Y_SPACE, ENEMY_SPEED, ENEMY_SHIELD_LIMIT, GAME_LOOPS_PER_SECOND, GAME_WIDTH, GAME_HEIGHT, MAX_ACTIVE_MISSILES, MISSILE_WIDTH, MISSILE_HEIGHT, MISSILE_SPEED, NUM_ENEMY_ROWS, NUM_LIVES, SHIELD_WIDTH, TANK_SPEED, TANK_MARGIN, USE_ANIMATION_FRAME } from "./constants.js";
+import { BOMB_SPEED, DEFAULT_SPRITE_SIZE, ENEMY_GROUND_LIMIT, ENEMY_SIZE, ENEMY_LEVEL_INCREASE_Y, ENEMY_STAGGER_FRAMES_MIN, ENEMY_STAGGER_FRAMES_MAX, ENEMY_X_SPACE, ENEMY_Y_SPACE, ENEMY_SPEED, ENEMY_SHIELD_LIMIT, GAME_LOOPS_PER_SECOND, GAME_WIDTH, GAME_HEIGHT, MAX_ACTIVE_MISSILES, MISSILE_WIDTH, MISSILE_HEIGHT, MISSILE_SPEED, NUM_ENEMY_ROWS, NUM_LIVES, SHIELD_WIDTH, TANK_SPEED, TANK_MARGIN, USE_ANIMATION_FRAME } from "./constants.js";
 import { GameItem } from "./game-item.js";
 import { GameModel } from "./game-model.js";
 import { KeyboardManager } from "./keyboard-manager.js";
 import { Renderer } from "./renderer.js";
+import { SoundManager } from "./sound-manager.js";
 
 export class Game extends EventTarget {
 
@@ -21,6 +22,8 @@ export class Game extends EventTarget {
         this.model = new GameModel();
         this.interval = null;
         this.renderer = new Renderer(this.model);
+        this.soundManager = new SoundManager();
+        this.renderCount = 0;
 
         // Initial game values
         this.model.level = 1;
@@ -127,7 +130,6 @@ export class Game extends EventTarget {
             console.log('intervalSpeed', intervalSpeed);
             this.interval = setInterval(() => {
                 this.gameLoop();
-                //this.renderLoop();
             }, intervalSpeed);
         }
     }
@@ -146,8 +148,8 @@ export class Game extends EventTarget {
     }
 
 
-    calculateEnemyStaggerFrequency(numEnemies) {
-       
+    _calculateEnemyStaggerFrequency(numEnemies) {
+
         const percRemaining = numEnemies / 55;
         const percGone = 1 - percRemaining;
         const r = 1 - (percGone * percGone);
@@ -158,7 +160,7 @@ export class Game extends EventTarget {
 
     }
 
-    _calculateEnemyStaggerFrequency(numEnemies) {
+    calculateEnemyStaggerFrequency(numEnemies) {
         // For now hard coding this but needs some kind of "hockey curve" formula getting much faster at the end
 
         const sectors = [
@@ -306,6 +308,9 @@ export class Game extends EventTarget {
                 }
                 // }
             })
+
+            //Play sound
+            this.soundManager.playNote();
 
             // change currentEnemyRow
             this.currentEnemyRow--;
@@ -489,6 +494,7 @@ export class Game extends EventTarget {
 
         this.renderer.render();
 
+
         // Increase counters
         this.moveEnemyCount++;
 
@@ -515,12 +521,6 @@ export class Game extends EventTarget {
         // Clean up dead sprites
         this.model.removeDeadSprites();
 
-    }
-
-    renderLoop() {
-        this.renderer.render(this.renderCount);
-        this.renderCount++;
-        //this.animationFrameGameLoop();
     }
 
 }
