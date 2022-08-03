@@ -193,7 +193,7 @@ export class Game extends EventTarget {
             if (numEnemies >= sectors[i][0]) {
                 const fraction = sectors[i][1];
                 const stagger = ENEMY_STAGGER_FRAMES_MIN + Math.ceil(fraction * range);
-                console.log('new stagger ', numEnemies, fraction, stagger);
+                // console.log('new stagger ', numEnemies, fraction, stagger);
                 return stagger;
             }
         }
@@ -308,9 +308,6 @@ export class Game extends EventTarget {
                 }
                 // }
             })
-
-            //Play sound
-            this.soundManager.playNote();
 
             // change currentEnemyRow
             this.currentEnemyRow--;
@@ -520,6 +517,15 @@ export class Game extends EventTarget {
 
         // Clean up dead sprites
         this.model.removeDeadSprites();
+
+        const soundGap = (this.enemyStaggerFrequency * 0.8);
+        console.log(soundGap);
+        this.frameCount += 1;
+        if(this.frameCount >= Math.max(soundGap, 20)) {
+            //Play sound
+            this.soundManager.playNote();
+            this.frameCount = 0;
+        }
 
     }
 

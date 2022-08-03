@@ -25,7 +25,7 @@ export const GAME_LOOPS_PER_SECOND = 100;
 export const MISSILE_SPEED = 5;
 export const MISSILE_WIDTH = 1;
 export const MISSILE_HEIGHT = 6;
-export const MAX_ACTIVE_MISSILES = 1;
+export const MAX_ACTIVE_MISSILES = 5;
 
 export const BOMB_SPEED = 2;
 export const MAX_BOMBS = 1;

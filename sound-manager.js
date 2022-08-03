@@ -27,7 +27,7 @@ export class SoundManager {
         osc.stop(this.audio.currentTime + 0.1);
     }
 
-    playNote() {
+    playNote(perc) {
         this.soundAlien(this.tune[this.currentNote]);
         this.currentNote++;
         if(this.currentNote > this.tune.length - 1) {
