@@ -1,0 +1,78 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div screen-container>
+        <div intro-screen>
+            <h1>SPACE INVADERS</h1>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+        <div game-screen>
+            <div game-header>
+                <div>SCORE: <span score-text>0</span></div>
+                <div>LEVEL: <span level-text>0</span></div>
+
+                <button onclick="window.game.start()">Play</button>
+                <button onclick="window.game.stop()">Pause</button>
+                <button onclick="window.game.nextLevel()">Next Level</button>
+
+            </div>
+            <!-- Game container takes up the space as game-canvas is absolute -->
+            <div game-canvas-container>
+                <div game-canvas>
+                    Game
+                </div>
+            </div>
+            <div game-footer>
+                <h3>Footer</h3>
+            </div>
+        </div>
+        <div end-screen>
+            <h1>Game Over</h1>
+            <button onclick="restart()">Restart</button>
+        </div>
+    </div>
+</body>
+
+<script>
+
+    function hideElement(element) {
+        element.style.display = 'none';
+    }
+
+    function showScreen(name) {
+        const screens = ['intro-screen', 'game-screen', 'end-screen'];
+        screens.forEach((screenName) => {
+            const el = window.document.querySelector(`[${screenName}]`);
+            el.style.display = screenName === name ? 'block' : 'none';
+        })
+    }
+
+    function startGame() {
+        console.log('Start Game');
+        showScreen('game-screen');
+        window.game.addEventListener('GAME_OVER', gameOverHandler);
+        window.game.start();
+
+    }
+
+    function gameOverHandler(event) {
+        showScreen('end-screen');
+    }
+
+    function restart() {
+        window.game.restart();
+        showScreen('intro-screen');
+    }
+</script>
+
+
+<script type="module" src="game.js"></script>
+
+
+</html>
