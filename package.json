@@ -1,0 +1,25 @@
+{
+  "name": "space-invaders",
+  "source": "src/index.html",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.html",
+  "scripts": {
+    "dev": "parcel src/index.html",
+    "build": "parcel build src/index.html --no-source-maps --experimental-scope-hoisting --public-url ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samthidny/space-invaders.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samthidny/space-invaders/issues"
+  },
+  "homepage": "https://github.com/samthidny/space-invaders#readme",
+  "devDependencies": {
+    "cssnano": "^4.1.11",
+    "postcss": "^8.4.14"
+  }
+}

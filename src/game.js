@@ -521,7 +521,7 @@ export class Game extends EventTarget {
         const soundGap = (this.enemyStaggerFrequency * 0.8);
         console.log(soundGap);
         this.frameCount += 1;
-        if(this.frameCount >= Math.max(soundGap, 20)) {
+        if (this.frameCount >= Math.max(soundGap, 20)) {
             //Play sound
             this.soundManager.playNote();
             this.frameCount = 0;
@@ -530,3 +530,6 @@ export class Game extends EventTarget {
     }
 
 }
+
+window.game = new Game();
+window.game.init();
